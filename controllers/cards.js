@@ -5,7 +5,6 @@ const Card = require('../models/card');
 const getCards = (req, res) => {
   return Card.find({})
     .populate('owner')
-    //Почему cards в объекте { data: cards}
     .then((cards) => res.status(200).send({ data: cards }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -19,7 +18,6 @@ const getCards = (req, res) => {
 //500 — Ошибка по умолчанию
 const createCard = (req, res) => {
   const { name, link, ownerId } = req.body;
-  //Откуда берется owner
   return Card.create({ name, link, owner: ownerId})
     .then(card => res.send({ data: card }))
     .catch((err) => {
@@ -48,7 +46,6 @@ const deleteCard = (req, res) => {
 const likeCard = (req, res) => {
   return Card.findByIdAndUpdate(
     req.params.cardId,
-    //Это сто такое?
     { $addToSet: { likes: req.user._id } },
     { new: true })
     .then((card) => {
