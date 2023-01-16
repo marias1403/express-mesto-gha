@@ -1,48 +1,44 @@
 const Card = require('../models/card');
+const http2 = require('node:http2');
 
-//400 — Переданы некорректные данные при создании карточки
-//500 — Ошибка по умолчанию
 const getCards = (req, res) => {
   return Card.find({})
     .populate('owner')
-    .then((cards) => res.status(200).send({ data: cards }))
+    .populate('likes')
+    .then((cards) => res.status(http2.constants.HTTP_STATUS_OK).send({ data: cards }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
-      }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 }
 
-//400 — Переданы некорректные данные при создании карточки
-//500 — Ошибка по умолчанию
 const createCard = (req, res) => {
   const { name, link, ownerId } = req.body;
   return Card.create({ name, link, owner: ownerId})
-    .then(card => res.send({ data: card }))
+    .then(card => res.status(http2.constants.HTTP_STATUS_CREATED).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
+        return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки'});
       }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 }
 
-//404 — Карточка с указанным _id не найдена
 const deleteCard = (req, res) => {
   return Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if(!card._id) {
-        return res.status(404).send({ message: 'Карточка с указанным _id не найдена'});
+        return res.status(http2.constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена'});
       }
-      return res.status(200).send({ data: card });
+      return res.status(http2.constants.HTTP_STATUS_OK).send({ data: card });
     })
-    .catch(err => res.status(500).send(err));
+    .catch((err) => {
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
+    });
 }
 
-//400 — Переданы некорректные данные для постановки/снятии лайка
-//404 — Передан несуществующий _id карточки
-//500 — Ошибка по умолчанию
 const likeCard = (req, res) => {
   return Card.findByIdAndUpdate(
     req.params.cardId,
@@ -50,21 +46,16 @@ const likeCard = (req, res) => {
     { new: true })
     .then((card) => {
       if(!card._id) {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки'});
+        return res.status(http2.constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Передан несуществующий _id карточки'});
       }
-      return res.status(200).send({ data: card });
+      return res.status(http2.constants.HTTP_STATUS_OK).send({ data: card });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
-      }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 }
 
-//400 — Переданы некорректные данные для постановки/снятии лайка
-//404 — Передан несуществующий _id карточки
-//500 — Ошибка по умолчанию
 const dislikeCard = (req, res) => {
   return Card.findByIdAndUpdate(
     req.params.cardId,
@@ -72,15 +63,13 @@ const dislikeCard = (req, res) => {
     { new: true })
     .then((card) => {
       if(!card._id) {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки'});
+        return res.status(http2.constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Передан несуществующий _id карточки'});
       }
-      return res.status(200).send({ data: card });
+      return res.status(http2.constants.HTTP_STATUS_OK).send({ data: card });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
-      }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 }
 

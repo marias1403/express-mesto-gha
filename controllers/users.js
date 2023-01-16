@@ -1,87 +1,72 @@
 const User = require('../models/user');
+const http2 = require('node:http2');
 
-//400 — Переданы некорректные данные при создании пользователя
-//500 — Ошибка по умолчанию
 const getUsers = (req, res) => {
   return User.find({})
-    .then((users) => res.status(200).send({ data: users }))
+    .then((users) => res.status(http2.constants.HTTP_STATUS_OK).send({ data: users }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
-      }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 };
 
-//400 — Пользователь по указанному _id не найден
-//500 — Ошибка по умолчанию
 const getUserById = (req, res) => {
-  if (!req.params.userId) {
-    return res.status(400).send({message: 'Пользователь по указанному _id не найден'})
-  }
   return User.findOne({ id: req.params._id })
-    .then(user => res.status(200).send({ data: user }))
+    .then(user => res.status(http2.constants.HTTP_STATUS_OK).send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
-      }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 }
 
-//400 — Переданы некорректные данные при создании пользователя
-//500 — Ошибка по умолчанию
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   return User.create({ name, about, avatar })
     .then(user => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
+        return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({message: 'Переданы некорректные данные при создании пользователя'});
       }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 };
 
-//400 — Переданы некорректные данные при обновлении профиля
-//404 — Пользователь с указанным _id не найден
-//500 — Ошибка по умолчанию
 const updateUserProfile = (req, res) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
     { name: name, about: about },
     {
-      new: true, // обработчик then получит на вход обновлённую запись
-      runValidators: true, // данные будут валидированы перед изменением
+      new: true,
+      runValidators: true,
     })
     .then(user => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
+        return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({message: 'Переданы некорректные данные при обновлении профиля'});
       }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 }
 
-//400 — Переданы некорректные данные при обновлении аватара
-//404 — Пользователь с указанным _id не найден
-//500 — Ошибка по умолчанию
 const updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
     { avatar: avatar },
     {
-      new: true, // обработчик then получит на вход обновлённую запись
-      runValidators: true, // данные будут валидированы перед изменением
+      new: true,
+      runValidators: true,
     })
     .then(avatar => res.send({ data: avatar }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send(err);
+        return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({message: 'Переданы некорректные данные при обновлении аватара'});
       }
-      return res.status(500).send(err);
+      console.log(err);
+      return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({message: 'Ошибка сервера'});
     });
 }
 
