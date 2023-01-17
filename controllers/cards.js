@@ -6,7 +6,7 @@ const getCards = (req, res) => {
     .populate(['owner', 'likes'])
     .then((cards) => res.status(http2.constants.HTTP_STATUS_OK).send({ data: cards }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
       }
       console.log(err);
@@ -19,7 +19,7 @@ const createCard = (req, res) => {
   return Card.create({ name, link, owner: ownerId })
     .then(card => res.status(http2.constants.HTTP_STATUS_CREATED).send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки' });
       }
       console.log(err);
@@ -36,7 +36,7 @@ const deleteCard = (req, res) => {
       return res.status(http2.constants.HTTP_STATUS_OK).send({ data: card });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при удалении карточки' });
       }
       console.log(err);
@@ -57,6 +57,9 @@ const likeCard = (req, res) => {
       return res.status(http2.constants.HTTP_STATUS_OK).send({ data: card });
     })
     .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      }
       console.log(err);
       return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Ошибка сервера' });
     });
@@ -75,6 +78,9 @@ const dislikeCard = (req, res) => {
       return res.status(http2.constants.HTTP_STATUS_OK).send({ data: card });
     })
     .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      }
       console.log(err);
       return res.status(http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Ошибка сервера' });
     });

@@ -1,3 +1,4 @@
+const http2 = require('node:http2');
 const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -27,7 +28,7 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.all('*', (req, res) => {
-  res.status(404).send({ message: 'Такого адреса не существует' });
+  res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Такого адреса не существует' });
 });
 
 app.listen(PORT, () => {
