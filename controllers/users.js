@@ -5,7 +5,6 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-error');
 const BadRequestError = require('../errors/bad-request-error');
 const ConflictError = require('../errors/conflict-error');
-const {errors} = require("celebrate");
 
 const getUsers = (req, res, next) => {
   return User.find({})
@@ -23,10 +22,11 @@ const getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new BadRequestError('Переданы некорректные данные при получении пользователя');
+        next(throw new BadRequestError('Переданы некорректные данные при получении пользователя'));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 const createUser = (req, res, next) => {
@@ -38,19 +38,17 @@ const createUser = (req, res, next) => {
       email: req.body.email,
       password: hash,
     }))
-    .then((user) => res.send({ data: user }))
+    .then(() => res.send({name, about, avatar, email }))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        throw new BadRequestError('Переданы некорректные данные при создании пользователя');
+        next(throw new BadRequestError('Переданы некорректные данные при создании пользователя'));
       }
-
       if (err.code === 11000) {
-        throw new ConflictError('Пользователь с таким email уже существует');
+        next(throw new ConflictError('Пользователь с таким email уже существует'));
+      } else {
+        next(err);
       }
-
-      throw err
-    })
-    .catch(next)
+    });
 };
 
 const login = (req, res, next) => {
@@ -84,11 +82,12 @@ const updateUserProfile = (req, res, next) => {
       return res.status(http2.constants.HTTP_STATUS_OK).send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        throw new BadRequestError('Переданы некорректные данные при обновлении профиля');
+      if (err.name === 'ValidationError') {
+        next(throw new BadRequestError('Переданы некорректные данные при обновлении профиля'));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 const updateUserAvatar = (req, res, next) => {
@@ -103,11 +102,12 @@ const updateUserAvatar = (req, res, next) => {
     )
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError') {
-        throw new BadRequestError('Переданы некорректные данные при обновлении аватара');
+      if (err.name === 'ValidationError') {
+        next(throw new BadRequestError('Переданы некорректные данные при обновлении аватара'));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 const getCurrentUserInfo = (req, res, next) => {

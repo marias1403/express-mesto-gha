@@ -1,11 +1,14 @@
-const http2 = require('node:http2');
-const path = require('path');
 const express = require('express');
+const router = require('express').Router();
 const mongoose = require('mongoose');
-const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
+const userRouter = require('./routes/users');
+const cardRouter = require('./routes/cards');
 const auth = require('./middlewares/auth');
+const { validateUserBody, validateAuthentication } = require('./middlewares/validations');
 const { createUser, login } = require('./controllers/users');
+const BadRequestError = require('./errors/bad-request-error');
+const NotFoundError = require('./errors/not-found-error');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -15,35 +18,23 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-  }),
-}), login);
-
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string(),
-  }),
-}), createUser);
+app.post('/signin', validateAuthentication, login);
+app.post('/signup', validateUserBody, createUser);
 
 app.use(auth);
 
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
+app.use('/users', userRouter);
+app.use('/cards', cardRouter);
+
+router.use((req, res) => {
+  next(new NotFoundError('Маршрут не найден'));
+});
 
 app.all('*', (req, res) => {
-  res.status(http2.constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Такого адреса не существует' });
+  throw new BadRequestError('Такого адреса не существует');
 });
 
 app.use(errors());
