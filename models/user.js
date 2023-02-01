@@ -7,10 +7,10 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     validate: {
-      validator: function(value) {
+      validator(value) {
         return validator.isEmail(value);
       },
-      message: props => `${props.value} is not a valid email!`
+      message: (props) => `${props.value} is not a valid email!`,
     },
     required: [true, 'User email required'],
     unique: [true, 'Email already in use'],
@@ -37,10 +37,10 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     validate: {
-      validator: function(v) {
+      validator(v) {
         return validator.isURL(v);
       },
-      message: props => `${props.value} is not a valid link!`
+      message: (props) => `${props.value} is not a valid link!`,
     },
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     required: false,
@@ -53,13 +53,11 @@ userSchema.statics.findUserByCredentials = function (email, password) {
       if (!user) {
         return Promise.reject(new UnauthorizedError('Неправильные почта или пароль'));
       }
-
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
             return Promise.reject(new UnauthorizedError('Неправильные почта или пароль'));
           }
-
           return user;
         });
     });
